@@ -1,0 +1,47 @@
+- hosts: workers
+  #connection: local
+  become: true
+  #become_user: root
+  roles:
+  - base
+
+- hosts: masters
+  #connection: local
+  become: true
+  #become_user: root
+  roles:
+  - base
+
+- hosts: workers
+  #connection: local
+  become: true
+  tasks:
+   - name: Workers Role
+     ansible.builtin.include_role:
+       name: "{{ item }}"
+     loop:
+      - "{{ ansible_distribution }}"
+
+- hosts: masters
+  #connection: local
+  become: true
+  # become_user: root
+  tasks:
+   - name: Masters Role
+     ansible.builtin.include_role:
+       name: "{{ item }}"
+     loop:
+      - "{{ ansible_distribution }}"
+
+- hosts: masters
+  #connection: local
+  become: true
+  #become_user: root
+  roles:
+  - initkubernetes
+#
+- hosts: workers
+  become: true
+  #become_user: aca
+  roles:
+  - worker-join

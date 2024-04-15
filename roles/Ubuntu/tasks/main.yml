@@ -1,0 +1,48 @@
+- name: Set up docker repository for Ubuntu
+  shell: sudo apt install -y curl gnupg2 software-properties-common apt-transport-https ca-certificates
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"]
+
+- name: Set up docker repository for Ubuntu 2
+  shell: sudo apt update
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"]
+
+
+- name: Install the latest version of Docker Engine and containerd on Ubuntu
+  package:
+    name:
+    - docker.io #docker-ce
+    # - docker-ce-cli
+    #- containerd.io
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"]
+- name: Add keyrings folder to Ubuntu 20.04
+  shell: mkdir -p -m 755 /etc/apt/keyrings
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"] and ansible_distribution_version <= "22.04"
+- name: Add kubernetes Repo to Debian/Ubuntu part 1
+  #shell: >
+  #curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo
+  #apt-key add -
+  shell: curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ repo_version }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"]
+- name: Add kubernetes Repo to Debian/Ubuntu part 2
+  shell: echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ repo_version }}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"]
+- name: Add kubernetes Repo to Debian/Ubuntu part 3
+  shell: apt-get update
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"]
+- name: Install kubernetes on Debian/Ubuntu
+  #shell: apt install -y kubelet={{ ubuntu_kubernetes_version }} kubeadm={{ ubuntu_kubernetes_version }} kubectl={{ ubuntu_kubernetes_version }}
+  shell: apt install -y kubelet kubeadm kubectl
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"]
+- name: before init on Ubuntu
+  shell: "sudo systemctl daemon-reload \nsudo systemctl restart docker\nsudo systemctl enable docker\nlsmod | grep br_netfilter\nsudo systemctl enable kubelet\nsudo kubeadm config images pull\nsudo containerd config default | sudo tee /etc/containerd/config.toml >/dev/null 2>&1\nsudo sed -i 's/SystemdCgroup \\= false/SystemdCgroup \\= true/g' /etc/containerd/config.toml\nsystemctl restart containerd\n"
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"]
+

@@ -1,0 +1,68 @@
+- name: install helm if it does not exist
+  unarchive:
+    src: https://get.helm.sh/{{ helm_version }}
+    dest: /usr/local/bin
+    extra_opts: --strip-components=1
+    owner: root
+    group: root
+    mode: 755
+    remote_src: true
+  args:
+    creates: /usr/local/bin/helm
+
+  #- name: Update all packages to their latest version on all OS
+  #become: true
+  #become_user: root
+- name: Disable Swap on all OS
+  # package:
+  #  update_cache: true
+  # name: "*"
+  # state: latest
+
+
+  command: swapoff -a
+  become: true
+  #sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+- name: Disable swap permanently, persist reboots
+  replace:
+    path: /etc/fstab
+    regexp: '^(\s*)([^#\n]+\s+)(\w+\s+)swap(\s+.*)$'
+    replace: '#\1\2\3swap\4'
+    backup: yes
+
+- name: Add the overlay kernel module
+  modprobe:
+    name: overlay
+    state: present
+- name: Add the br_netfilter kernel module
+  modprobe:
+    name: br_netfilter
+    state: present
+
+  # - name: add settings to syscontrol on all OS
+  # shell: |
+  #       sudo tee /etc/sysctl.d/kubernetes.conf<<EOF
+  #      net.bridge.bridge-nf-call-ip6tables = 1
+- name: Create a empty file for kubernetes sysctl params.
+  #     net.bridge.bridge-nf-call-iptables = 1
+  #    net.ipv4.ip_forward = 1
+  #   EOF
+  copy:
+    content: ""
+    dest: /etc/sysctl.d/kubernetes.conf
+    force: no
+
+- name: Configure sysctl params for Kubernetes.
+  lineinfile:
+    path: /etc/sysctl.d/kubernetes.conf
+    line: "{{ item }}"
+  with_items:
+  - 'net.bridge.bridge-nf-call-ip6tables = 1'
+  - 'net.bridge.bridge-nf-call-iptables = 1'
+  - 'net.ipv4.ip_forward = 1'
+
+- name: restart sysctl on all OS
+  command: sysctl --system
+
+
+

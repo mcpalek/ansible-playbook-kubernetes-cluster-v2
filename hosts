@@ -1,0 +1,11 @@
+[masters]
+192.168.122.210
+[workers]
+192.168.122.234
+
+#localhost ansible_connection=local
+
+[all:vars]
+ansible_user="aca"
+ansible_become=yes
+ansible_become_method=sudo
