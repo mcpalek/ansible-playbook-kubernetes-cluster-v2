@@ -1,17 +1,17 @@
 #!/bin/bash
-REMOTE_USER="aca"
-REMOTE_HOST1="192.168.122.43"
-REMOTE_HOST2="192.168.122.57"
-REMOTE_FILE=/etc/sudoers
-
-TEXT_TO_ADD="aca ALL=(ALL) NOPASSWD:ALL"
-APPEND_COMMAND="echo '$TEXT_TO_ADD' >> $REMOTE_FILE"
-
- cat ~/.ssh/ansible.pub | ssh $REMOTE_USER@$REMOTE_HOST1 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
- #ssh $REMOTE_USER@$REMOTE_HOST1 "$CHANGE_COMMAND"
- ssh $REMOTE_USER@$REMOTE_HOST1 "$APPEND_COMMAND"
- # Press ctrl +D to exit from server 1 and you will be prompted for password for the second server
-
-  cat ~/.ssh/ansible.pub | ssh $REMOTE_USER@$REMOTE_HOST2 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
-  ssh $REMOTE_USER@$REMOTE_HOST2 "$APPEND_COMMAND"
-  #press ctrl +D to return to the ansible controller
+# check if the sript is runing with root privilages
+if [[ $EUID -ne 0 ]]; then
+   echo " This script must be run as root"
+   exit 1
+fi
+# create SSH key for root user
+ssh-keygen -t ed25519 -f /root/.ssh/ansible -N ""
+echo "SSH key created and saved to /root/.ssh/ansible"
+inventory_file="hosts"
+#check if the hosts file exists at the path provided
+if [! -f "$inventory_file"]; then
+   echo "Ansible inventory file not found:$inventory_file"
+   exit 1
+fi
+#read the hostnames from the inventory file
+hosts=
