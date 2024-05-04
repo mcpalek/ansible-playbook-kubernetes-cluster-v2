@@ -23,12 +23,13 @@
 
 - name: Install yum utils
   yum:
-    name: "{{ item }}"
+    name: # "{{ item }}"
+    - yum-utils
+    - device-mapper-persistent-data
+    - lvm2
     state: latest
-  with_items:
-  - yum-utils
-  - device-mapper-persistent-data
-  - lvm2
+    #with_items:
+
 
 - name: Set up docker repository for RedHat/CentOs/Rocky
   get_url:
@@ -65,8 +66,7 @@
     baseurl: https://pkgs.k8s.io/core:/stable:/{{ repo_version }}/rpm/
     gpgkey: https://pkgs.k8s.io/core:/stable:/{{ repo_version }}/rpm/repodata/repomd.xml.key
     exclude: kubelet kubeadm kubectl cri-tools kubernetes-cni
-    #shell: >
-    # cat <<EOF > /etc/yum.repos.d/kubernetes.repo #magic___^_^___line [kubernetes] #magic___^_^___line name=Kubernetes #magic___^_^___line baseurl=https://pkgs.k8s.io/core:/stable:/{{ repo_version }}/rpm/ #magic___^_^___line enabled=1 #magic___^_^___line gpgcheck=1 #magic___^_^___line gpgkey=https://pkgs.k8s.io/core:/stable:/{{ repo_version }}/rpm/repodata/repomd.xml.key #magic___^_^___line exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+
 
 
 - name: Install Kubernetes Package on RedHat/CentOs/Rocky
