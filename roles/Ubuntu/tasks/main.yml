@@ -1,26 +1,44 @@
-- name: Set up docker repository for Ubuntu
-  shell: sudo apt install -y curl gnupg2 software-properties-common apt-transport-https ca-certificates
-  when:
-  - ansible_distribution in ["Debian", "Ubuntu"]
+- name: Ensure apt is using HTTPS
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - software-properties-common
 
-- name: Set up docker repository for Ubuntu 2
-  shell: sudo apt update
-  when:
-  - ansible_distribution in ["Debian", "Ubuntu"]
+- name: Add Docker GPG key
+  ansible.builtin.apt_key:
+    url: "https://download.docker.com/linux/ubuntu/gpg"
+    state: present
 
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "{{ docker_apt_repository }}"
+    state: present
 
-- name: Install the latest version of Docker Engine and containerd on Ubuntu
-  package:
-    name:
-    - docker.io #docker-ce
-    # - docker-ce-cli
-    #- containerd.io
-  when:
-  - ansible_distribution in ["Debian", "Ubuntu"]
-- name: Add keyrings folder to Ubuntu 20.04
-  shell: mkdir -p -m 755 /etc/apt/keyrings
-  when:
-  - ansible_distribution in ["Debian", "Ubuntu"] and ansible_distribution_version <= "22.04"
+- name: Install Docker CE
+  ansible.builtin.apt:
+    name: docker-ce
+    state: present
+    update_cache: true
+
+- name: Configure Docker daemon options
+  ansible.builtin.template:
+    src: "templates/docker_daemon.json.j2"
+    dest: "/etc/docker/daemon.json"
+    owner: 'root'
+    group: 'root'
+    mode: '0755' # Optional file permissions
+  notify: Restart Docker
+
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
 - name: Add kubernetes Repo to Debian/Ubuntu part 1
   #shell: >
   #curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo
