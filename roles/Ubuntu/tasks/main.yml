@@ -38,6 +38,8 @@
     name: docker
     enabled: true
     state: started
+
+
 - name: Add keyrings folder to Ubuntu 20.04
   shell: mkdir -p -m 755 /etc/apt/keyrings
   when:
