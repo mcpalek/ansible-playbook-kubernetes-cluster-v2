@@ -1,5 +1,5 @@
 # ansible-playbook-kubernetes-cluste
-Ansible playbook for kubernetes cluster which works on Rocky/Ubuntu/CentOS 
+Ansible playbook for kubernetes cluster which works on Rocky/Ubuntu/CentOS/RedHat 
 First create an ssh key  ssh-keygen -t ed25519 -C "ansible" /home/aca/.ssh/ansible
 
 Then copy it to all servers
