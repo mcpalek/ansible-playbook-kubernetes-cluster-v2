@@ -1,4 +1,4 @@
 helm_version: helm-v3.11.0-linux-amd64.tar.gz
 rocky_kubernetes_version: 1.28.1 # \1.29.1
-ubuntu_kubernetes_version: 1.28.0-00 #1.28.4-1.1 #1.29.1-1.1
-repo_version: v1.28 # v1.29
+ubuntu_kubernetes_version: 1.29.1-1.1 #1.28.4-1.1 #1.29.1-1.1    1.29.1-1.1
+repo_version: v1.29 # v1.29

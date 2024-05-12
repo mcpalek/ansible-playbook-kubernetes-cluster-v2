@@ -1,7 +1,7 @@
 [masters]
-192.168.122.157
+192.168.122.60
 [workers]
-192.168.122.191
+192.168.122.61
 
 #localhost ansible_connection=local
 

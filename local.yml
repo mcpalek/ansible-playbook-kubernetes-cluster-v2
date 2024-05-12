@@ -1,37 +1,35 @@
-- hosts: workers
+- hosts: all
   #connection: local
   become: true
   #become_user: root
   roles:
   - base
 
-- hosts: masters
-  #connection: local
-  become: true
-  #become_user: root
-  roles:
-  - base
 
-- hosts: workers
-  #connection: local
+
+#- hosts: all #workers
+#  become: true
+#  roles:
+#  - name: Ubuntu 
+#    when:
+#     - ansible_facts['distribution']=='Ubuntu'
+
+- hosts: all
   become: true
   tasks:
-   - name: Workers Role
+   - name: Choose Linux distro and run it's roles
      ansible.builtin.include_role:
        name: "{{ item }}"
      loop:
       - "{{ ansible_distribution }}"
 
-- hosts: masters
-  #connection: local
-  become: true
-  # become_user: root
-  tasks:
-   - name: Masters Role
-     ansible.builtin.include_role:
-       name: "{{ item }}"
-     loop:
-      - "{{ ansible_distribution }}"
+#- hosts: all #workers
+#  #connection: local
+#  become: true
+#  roles:
+#   - name: Rocky 
+#     when:
+#     - ansible_distribution in ["Rocky", "CentOS" ,"RedHat"]
 
 - hosts: masters
   #connection: local

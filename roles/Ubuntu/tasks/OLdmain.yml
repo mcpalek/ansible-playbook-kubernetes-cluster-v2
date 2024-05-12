@@ -1,0 +1,66 @@
+- name: Ensure apt is using HTTPS
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - software-properties-common
+
+- name: Add Docker GPG key
+  ansible.builtin.apt_key:
+    url: "https://download.docker.com/linux/ubuntu/gpg"
+    state: present
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "{{ docker_apt_repository }}"
+    state: present
+
+- name: Install Docker CE
+  ansible.builtin.apt:
+    name: docker-ce
+    state: present
+    update_cache: true
+
+- name: Configure Docker daemon options
+  ansible.builtin.template:
+    src: "templates/docker_daemon.json.j2"
+    dest: "/etc/docker/daemon.json"
+    owner: 'root'
+    group: 'root'
+    mode: '0755' # Optional file permissions
+  notify: Restart Docker
+
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+
+
+- name: Add keyrings folder to Ubuntu 20.04
+  shell: mkdir -p -m 755 /etc/apt/keyrings
+  when:
+  - ansible_distribution in ["Debian", "Ubuntu"] and ansible_distribution_version <= "22.04"
+- name: Add kubernetes Repo to Debian/Ubuntu part 1
+  #shell: >
+  #curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo
+  #apt-key add -
+  shell: curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ repo_version }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+
+- name: Add kubernetes Repo to Debian/Ubuntu part 2
+  shell: echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ repo_version }}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+- name: Add kubernetes Repo to Debian/Ubuntu part 3
+  shell: apt-get update
+
+- name: Install kubernetes on Debian/Ubuntu
+  shell: apt install -y kubelet={{ ubuntu_kubernetes_version }} kubeadm={{ ubuntu_kubernetes_version }} kubectl={{ ubuntu_kubernetes_version }}
+
+- name: before init on Ubuntu
+  shell: "sudo systemctl daemon-reload \nsudo systemctl restart docker\nsudo systemctl enable docker\nlsmod | grep br_netfilter\nsudo systemctl enable kubelet\nsudo kubeadm config images pull\nsudo containerd config default | sudo tee /etc/containerd/config.toml >/dev/null 2>&1\nsudo sed -i 's/SystemdCgroup \\= false/SystemdCgroup \\= true/g' /etc/containerd/config.toml\nsystemctl restart containerd\n"
+
+
